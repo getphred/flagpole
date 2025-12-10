@@ -2,8 +2,8 @@
 
 Feature flag handling for PHP. Simple, framework-agnostic, and lightweight.
 
-![CI](https://github.com/phred/flagpole/actions/workflows/ci.yml/badge.svg)
-![Packagist](https://img.shields.io/packagist/v/phred/flagpole.svg)
+![CI](https://github.com/getphred/flagpole/actions/workflows/ci.yml/badge.svg)
+![Packagist](https://img.shields.io/packagist/v/getphred/flagpole.svg)
 
 ## Installation
 
