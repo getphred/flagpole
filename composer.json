@@ -1,13 +1,13 @@
 {
-  "name": "phred/flagpole",
+  "name": "getphred/flagpole",
   "description": "Feature flag handling library for PHP. Simple, fast, and framework-agnostic.",
   "type": "library",
   "license": "MIT",
   "authors": [
     {
       "name": "Phred",
-      "email": "phred@phred.com",
-      "homepage": "https://phred.com",
+      "email": "phred@getphred.com",
+      "homepage": "https://getphred.com",
       "role": "Owner"
     }
   ],
@@ -19,10 +19,10 @@
     "ab-testing",
     "php"
   ],
-  "homepage": "https://github.com/phred/flagpole",
+  "homepage": "https://github.com/getphred/flagpole",
   "support": {
-    "issues": "https://github.com/phred/flagpole/issues",
-    "source": "https://github.com/phred/flagpole"
+    "issues": "https://github.com/getphred/flagpole/issues",
+    "source": "https://github.com/getphred/flagpole"
   },
   "require": {
     "php": ">=8.1"
