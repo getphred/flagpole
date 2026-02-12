@@ -15,7 +15,7 @@ final class FlagHydrator
 
     /**
      * @param string $name
-     * @param array{enabled?:bool|null, rolloutPercentage?:int|null, allowList?:list<string>, rules?:list<array{attribute:string, operator:string, value:mixed}>, targetingKey?:string|null} $data
+     * @param array<string, mixed> $data
      * @return Flag
      */
     public function hydrate(string $name, array $data): Flag
@@ -23,7 +23,7 @@ final class FlagHydrator
         $rules = [];
         if (isset($data['rules']) && is_array($data['rules'])) {
             foreach ($data['rules'] as $ruleDef) {
-                if (!isset($ruleDef['attribute'], $ruleDef['operator'], $ruleDef['value'])) {
+                if (!is_array($ruleDef) || !isset($ruleDef['attribute'], $ruleDef['operator'], $ruleDef['value'])) {
                     throw new \InvalidArgumentException(sprintf('Invalid rule definition for flag "%s". Missing attribute, operator, or value.', $name));
                 }
 
