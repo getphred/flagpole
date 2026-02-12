@@ -15,6 +15,9 @@ final class Flag
         public readonly ?int $rolloutPercentage = null,
         /** @var list<string> */
         public readonly array $allowList = [],
+        /** @var list<Rule> */
+        public readonly array $rules = [],
+        public readonly ?string $targetingKey = null,
     ) {
         if ($this->rolloutPercentage !== null) {
             if ($this->rolloutPercentage < 0 || $this->rolloutPercentage > 100) {

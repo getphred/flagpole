@@ -8,6 +8,7 @@ use FlagPole\Context;
 use FlagPole\FeatureManager;
 use FlagPole\Repository\InMemoryFlagRepository;
 use PHPUnit\Framework\TestCase;
+use Psr\Log\AbstractLogger;
 
 final class FeatureManagerTest extends TestCase
 {
@@ -21,6 +22,27 @@ final class FeatureManagerTest extends TestCase
 
         $this->assertTrue($fm->isEnabled('hard-on'));
         $this->assertFalse($fm->isEnabled('hard-off', null, true));
+    }
+
+    public function testLogging(): void
+    {
+        $logger = new class extends AbstractLogger {
+            public array $logs = [];
+            public function log($level, string|\Stringable $message, array $context = []): void
+            {
+                $this->logs[] = (string)$message;
+            }
+        };
+
+        $repo = InMemoryFlagRepository::fromArray([
+            'test-flag' => ['enabled' => true],
+        ]);
+        $fm = new FeatureManager($repo, null, $logger);
+
+        $fm->isEnabled('test-flag');
+
+        $this->assertCount(1, $logger->logs);
+        $this->assertStringContainsString('Flag "test-flag" evaluated to TRUE via explicit "enabled" override', $logger->logs[0]);
     }
 
     public function testAllowListWins(): void
@@ -115,5 +137,71 @@ final class FeatureManagerTest extends TestCase
         $emptyCtx = Context::fromArray([]);
         $this->assertFalse($fm->isEnabled('gradual', $emptyCtx, false));
         $this->assertTrue($fm->isEnabled('gradual', $emptyCtx, true));
+    }
+
+    public function testRulesMatching(): void
+    {
+        $repo = InMemoryFlagRepository::fromArray([
+            'beta-users' => [
+                'rules' => [
+                    ['attribute' => 'group', 'operator' => 'eq', 'value' => 'beta'],
+                ],
+            ],
+            'version-check' => [
+                'rules' => [
+                    ['attribute' => 'version', 'operator' => 'gte', 'value' => '2.0'],
+                ],
+            ],
+            'multi-rules' => [
+                'rules' => [
+                    ['attribute' => 'plan', 'operator' => 'in', 'value' => ['pro', 'enterprise']],
+                    ['attribute' => 'region', 'operator' => 'eq', 'value' => 'us-east'],
+                ],
+            ],
+        ]);
+        $fm = new FeatureManager($repo);
+
+        // Single rule 'eq'
+        $this->assertTrue($fm->isEnabled('beta-users', Context::fromArray(['group' => 'beta'])));
+        $this->assertFalse($fm->isEnabled('beta-users', Context::fromArray(['group' => 'standard'])));
+
+        // Single rule 'gte'
+        $this->assertTrue($fm->isEnabled('version-check', Context::fromArray(['version' => '2.0'])));
+        $this->assertTrue($fm->isEnabled('version-check', Context::fromArray(['version' => '2.1'])));
+        $this->assertFalse($fm->isEnabled('version-check', Context::fromArray(['version' => '1.9'])));
+
+        // Multi rules (OR behavior because it matches ANY rule in the list as implemented currently)
+        // Wait, the plan said: "Precedence: allowList > enabled > rules > rolloutPercentage"
+        // And the implementation I did:
+        /*
+        if (!empty($flag->rules)) {
+            foreach ($flag->rules as $rule) {
+                if ($this->matchRule($rule, $context)) {
+                    return true;
+                }
+            }
+        }
+        */
+        // This is indeed OR behavior. If ANY rule matches, it returns true.
+        $this->assertTrue($fm->isEnabled('multi-rules', Context::fromArray(['plan' => 'pro'])));
+        $this->assertTrue($fm->isEnabled('multi-rules', Context::fromArray(['region' => 'us-east'])));
+        $this->assertFalse($fm->isEnabled('multi-rules', Context::fromArray(['plan' => 'free', 'region' => 'eu-west'])));
+    }
+
+    public function testExplicitTargetingKey(): void
+    {
+        $repo = InMemoryFlagRepository::fromArray([
+            'custom-key' => [
+                'targetingKey' => 'orgId',
+                'allowList' => ['org_123'],
+            ],
+        ]);
+        $fm = new FeatureManager($repo);
+
+        $ctxMatched = Context::fromArray(['orgId' => 'org_123']);
+        $ctxUnmatched = Context::fromArray(['orgId' => 'org_456', 'userId' => 'org_123']); // userId matches but orgId doesn't
+
+        $this->assertTrue($fm->isEnabled('custom-key', $ctxMatched));
+        $this->assertFalse($fm->isEnabled('custom-key', $ctxUnmatched));
     }
 }

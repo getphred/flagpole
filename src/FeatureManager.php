@@ -5,13 +5,18 @@ declare(strict_types=1);
 namespace FlagPole;
 
 use FlagPole\Repository\FlagRepositoryInterface;
+use Psr\Log\LoggerInterface;
 
 final class FeatureManager
 {
+    private Evaluator $evaluator;
+
     public function __construct(
         private FlagRepositoryInterface $repository,
-        private Evaluator $evaluator = new Evaluator()
+        ?Evaluator $evaluator = null,
+        ?LoggerInterface $logger = null
     ) {
+        $this->evaluator = $evaluator ?? new Evaluator($logger);
     }
 
     public function isEnabled(string $flagName, ?Context $context = null, bool $default = false): bool

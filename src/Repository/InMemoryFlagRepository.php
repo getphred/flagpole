@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace FlagPole\Repository;
 
 use FlagPole\Flag;
+use FlagPole\FlagHydrator;
+use FlagPole\Rule;
 
 /**
  * Simple in-memory repository. Useful for bootstrapping or tests.
@@ -15,18 +17,14 @@ final class InMemoryFlagRepository implements FlagRepositoryInterface
     private array $flags = [];
 
     /**
-     * @param array<string, array{enabled?:bool|null, rolloutPercentage?:int|null, allowList?:list<string>}> $config
+     * @param array<string, array{enabled?:bool|null, rolloutPercentage?:int|null, allowList?:list<string>, rules?:list<array{attribute:string, operator:string, value:mixed}>, targetingKey?:string|null}> $config
      */
     public static function fromArray(array $config): self
     {
+        $hydrator = new FlagHydrator();
         $items = [];
         foreach ($config as $name => $def) {
-            $items[$name] = new Flag(
-                name: (string)$name,
-                enabled: $def['enabled'] ?? null,
-                rolloutPercentage: $def['rolloutPercentage'] ?? null,
-                allowList: $def['allowList'] ?? []
-            );
+            $items[$name] = $hydrator->hydrate((string)$name, $def);
         }
         return new self($items);
     }
