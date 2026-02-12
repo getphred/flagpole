@@ -6,7 +6,6 @@ namespace FlagPole\Repository;
 
 use FlagPole\Flag;
 use FlagPole\FlagHydrator;
-use FlagPole\Rule;
 
 /**
  * Loads flags from a JSON file.

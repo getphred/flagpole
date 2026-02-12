@@ -6,7 +6,6 @@ namespace FlagPole\Repository;
 
 use FlagPole\Flag;
 use FlagPole\FlagHydrator;
-use FlagPole\Rule;
 
 /**
  * Simple in-memory repository. Useful for bootstrapping or tests.

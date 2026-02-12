@@ -14,9 +14,7 @@ final class FlagHydrator
     ];
 
     /**
-     * @param string $name
      * @param array<string, mixed> $data
-     * @return Flag
      */
     public function hydrate(string $name, array $data): Flag
     {
